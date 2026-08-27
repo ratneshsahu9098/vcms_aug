@@ -454,6 +454,13 @@ def register_routes(app):
         qr_buffer = generate_vehicle_qr(vehicle)
         return send_file(qr_buffer, mimetype="image/png", download_name=f"qr_{vehicle.vehicle_number}.png")
 
+    @app.route("/vehicles/<int:vehicle_id>/qr-dates")
+    @login_required
+    def vehicle_qr_dates(vehicle_id):
+        vehicle = Vehicle.query.get_or_404(vehicle_id)
+        statuses = vehicle.document_statuses()
+        return render_template("vehicle_qr_dates.html", vehicle=vehicle, statuses=statuses, today=date.today())
+
     # ---- WhatsApp reminder helper -------------------------------------------
 
     @app.route("/vehicles/<int:vehicle_id>/whatsapp/<document_label>")

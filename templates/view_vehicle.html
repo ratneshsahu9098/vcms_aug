@@ -31,6 +31,7 @@
       <a href="{{ url_for('edit_vehicle', vehicle_id=vehicle.id) }}" class="btn btn-primary"><i class="fa-solid fa-pen"></i> Edit</a>
       <a href="{{ url_for('vehicle_tax', vehicle_id=vehicle.id) }}" class="btn btn-outline-info"><i class="fa-solid fa-clock-rotate-left"></i> Tax History</a>
       <a href="{{ url_for('print_vehicle', vehicle_id=vehicle.id) }}" target="_blank" class="btn btn-outline-warning"><i class="fa-solid fa-print"></i> Print Compliance Card</a>
+      <a href="{{ url_for('vehicle_qr_dates', vehicle_id=vehicle.id) }}" target="_blank" class="btn btn-outline-secondary"><i class="fa-solid fa-qrcode"></i> QR & Dates</a>
       <a href="{{ url_for('whatsapp_expired', vehicle_id=vehicle.id) }}" target="_blank" class="btn btn-outline-success"><i class="fa-brands fa-whatsapp"></i> Send Expiry Reminder</a>
       <a href="{{ url_for('whatsapp_reminder', vehicle_id=vehicle.id, document_label='all') }}" target="_blank" class="btn btn-outline-success"><i class="fa-brands fa-whatsapp"></i> Send All Details</a>
       <a href="https://wa.me/{{ vehicle.mobile_number }}" target="_blank" class="btn btn-outline-success"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>

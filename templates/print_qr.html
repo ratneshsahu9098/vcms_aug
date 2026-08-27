@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Print QR Codes</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f4f6f9; }
+  .no-print { display: flex; gap: 10px; justify-content: center; padding: 14px; background: #fff; border-bottom: 1px solid #e5e7eb; }
+  .no-print .btn { padding: 8px 18px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: 1px solid #d1d5db; background: #fff; color: #374151; text-decoration: none; }
+  .no-print .btn:hover { background: #f3f4f6; }
+  .no-print .btn-primary { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+  .no-print .btn-primary:hover { background: #2563eb; }
+  .a4-page { width: 210mm; min-height: 297mm; margin: 20px auto; background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,0.1); page-break-after: always; padding: 15mm; }
+  .a4-page:last-child { page-break-after: avoid; }
+  .qr-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); gap: 8mm; width: 100%; height: calc(297mm - 30mm); }
+  .qr-cell { border: 1.5px solid #d1d5db; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8mm 5mm; text-align: center; }
+  .qr-cell img { width: 100px; height: 100px; }
+  .qr-cell .vnum { font-size: 16px; font-weight: 700; color: #1e293b; margin-top: 5mm; letter-spacing: 0.5px; }
+  .qr-cell .owner { font-size: 11px; color: #64748b; margin-top: 2mm; }
+  .qr-cell .rid { font-size: 9px; color: #94a3b8; font-family: monospace; margin-top: 2mm; }
+  @media print {
+    body { background: #fff; }
+    .no-print { display: none !important; }
+    .a4-page { box-shadow: none; margin: 0; page-break-after: always; }
+    .a4-page:last-child { page-break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="no-print">
+  <button class="btn btn-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
+  <button class="btn" onclick="window.close()"><i class="fa-solid fa-xmark"></i> Close</button>
+</div>
+
+{% for page in pages %}
+<div class="a4-page">
+  <div class="qr-grid">
+    {% for v in page %}
+    <div class="qr-cell">
+      <img src="{{ url_for('vehicle_qr', vehicle_id=v.id) }}" alt="QR">
+      <div class="vnum">{{ v.vehicle_number }}</div>
+      <div class="owner">{{ v.owner_name }}</div>
+      {% if v.created_at %}
+      <div class="rid">VC-{{ v.created_at.strftime('%Y%m%d') }}-{{ '%04d'|format(v.id) }}</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+    {% for _ in range(6 - page|length) %}
+    <div class="qr-cell" style="visibility:hidden;"></div>
+    {% endfor %}
+  </div>
+</div>
+{% endfor %}
+
+</body>
+</html>

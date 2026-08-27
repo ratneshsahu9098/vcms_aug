@@ -54,6 +54,9 @@
   <button type="button" id="btnPrintSelected" class="btn btn-outline-warning" disabled>
     <i class="fa-solid fa-print"></i> Print Selected (<span id="selectedCount">0</span>)
   </button>
+  <button type="button" id="btnPrintQR" class="btn btn-outline-info" disabled>
+    <i class="fa-solid fa-qrcode"></i> Print QR (<span id="selectedQRCount">0</span>)
+  </button>
   <form method="POST" action="{{ url_for('delete_all_vehicles') }}"
         onsubmit="return confirm('Delete ALL vehicles permanently? This cannot be undone.');" class="inline-form">
     <button type="submit" class="btn btn-outline-danger"><i class="fa-solid fa-trash"></i> Delete All</button>
@@ -153,11 +156,15 @@
   const checkboxes = document.querySelectorAll('.vehicle-check');
   const btnPrint = document.getElementById('btnPrintSelected');
   const countSpan = document.getElementById('selectedCount');
+  const btnQR = document.getElementById('btnPrintQR');
+  const qrCountSpan = document.getElementById('selectedQRCount');
 
   function updateCount() {
     const checked = document.querySelectorAll('.vehicle-check:checked').length;
     countSpan.textContent = checked;
+    qrCountSpan.textContent = checked;
     btnPrint.disabled = checked === 0;
+    btnQR.disabled = checked === 0;
   }
 
   selectAll.addEventListener('change', function() {
@@ -177,6 +184,14 @@
     document.querySelectorAll('.vehicle-check:checked').forEach(cb => ids.push(cb.dataset.id));
     if (ids.length > 0) {
       window.open('{{ url_for("print_vehicles") }}?ids=' + ids.join(','), '_blank');
+    }
+  });
+
+  btnQR.addEventListener('click', function() {
+    const ids = [];
+    document.querySelectorAll('.vehicle-check:checked').forEach(cb => ids.push(cb.dataset.id));
+    if (ids.length > 0) {
+      window.open('{{ url_for("print_qr") }}?ids=' + ids.join(','), '_blank');
     }
   });
 })();

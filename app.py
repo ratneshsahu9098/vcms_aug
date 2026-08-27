@@ -447,6 +447,21 @@ def register_routes(app):
             })
         return render_template("print_vehicles.html", vehicle_data=vehicle_data)
 
+    @app.route("/vehicles/print-qr")
+    @login_required
+    def print_qr():
+        ids_param = request.args.get("ids", "")
+        if not ids_param:
+            flash("No vehicles selected for QR printing.", "error")
+            return redirect(url_for("vehicle_list"))
+        id_list = [int(x) for x in ids_param.split(",") if x.strip().isdigit()]
+        if not id_list:
+            flash("No valid vehicles selected.", "error")
+            return redirect(url_for("vehicle_list"))
+        vehicles = Vehicle.query.filter(Vehicle.id.in_(id_list)).order_by(Vehicle.vehicle_number).all()
+        pages = [vehicles[i:i+6] for i in range(0, len(vehicles), 6)]
+        return render_template("print_qr.html", pages=pages)
+
     @app.route("/vehicles/<int:vehicle_id>/qr")
     @login_required
     def vehicle_qr(vehicle_id):

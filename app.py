@@ -236,6 +236,8 @@ def register_routes(app):
         districts = [r[0] for r in db.session.query(Vehicle.district).distinct() if r[0]]
         owner_names = [r[0] for r in db.session.query(Vehicle.owner_name).distinct() if r[0]]
 
+        session['filtered_vehicle_ids'] = [v.id for v in vehicles]
+
         return render_template(
             "vehicle_list.html",
             vehicles=vehicles,
@@ -367,8 +369,16 @@ def register_routes(app):
     @login_required
     def view_vehicle(vehicle_id):
         vehicle = Vehicle.query.get_or_404(vehicle_id)
-        prev_vehicle = Vehicle.query.filter(Vehicle.id < vehicle_id).order_by(Vehicle.id.desc()).first()
-        next_vehicle = Vehicle.query.filter(Vehicle.id > vehicle_id).order_by(Vehicle.id.asc()).first()
+        filtered_ids = session.get('filtered_vehicle_ids', [])
+        if filtered_ids and vehicle_id in filtered_ids:
+            idx = filtered_ids.index(vehicle_id)
+            prev_id = filtered_ids[idx - 1] if idx > 0 else None
+            next_id = filtered_ids[idx + 1] if idx < len(filtered_ids) - 1 else None
+            prev_vehicle = Vehicle.query.get(prev_id) if prev_id else None
+            next_vehicle = Vehicle.query.get(next_id) if next_id else None
+        else:
+            prev_vehicle = Vehicle.query.filter(Vehicle.id < vehicle_id).order_by(Vehicle.id.desc()).first()
+            next_vehicle = Vehicle.query.filter(Vehicle.id > vehicle_id).order_by(Vehicle.id.asc()).first()
         return render_template("view_vehicle.html", vehicle=vehicle, prev_vehicle=prev_vehicle, next_vehicle=next_vehicle, today=date.today())
 
     @app.route("/vehicles/<int:vehicle_id>/print")

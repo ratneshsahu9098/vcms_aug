@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+{% block title %}Settings{% endblock %}
+{% block page_title %}Settings{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <h3 class="panel-title"><i class="fa-solid fa-gear"></i> Application Settings</h3>
+  <div class="settings-list">
+    <div class="settings-row">
+      <span>Login Required</span>
+      <span class="badge-status {{ 'status-green' if config.LOGIN_REQUIRED else 'status-gray' }}">
+        {{ 'Enabled' if config.LOGIN_REQUIRED else 'Disabled' }}
+      </span>
+    </div>
+    <div class="settings-row">
+      <span>Reminder Windows</span>
+      <span>{{ config.REMINDER_WINDOWS|join(', ') }} days before expiry</span>
+    </div>
+    <div class="settings-row">
+      <span>Database</span>
+      <span class="text-muted">{{ config.SQLALCHEMY_DATABASE_URI }}</span>
+    </div>
+  </div>
+  <p class="text-muted mt-3">
+    Credentials and thresholds are configured in <code>config.py</code> or via environment variables
+    (<code>VCMS_ADMIN_USER</code>, <code>VCMS_ADMIN_PASSWORD</code>, <code>VCMS_LOGIN_REQUIRED</code>).
+  </p>
+</div>
+{% endblock %}

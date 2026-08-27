@@ -1,0 +1,7 @@
+Flask==3.0.3
+Flask-SQLAlchemy==3.1.1
+pandas==2.2.2
+openpyxl==3.1.5
+Werkzeug==3.0.3
+qrcode[pil]==7.4.2
+Pillow==10.4.0

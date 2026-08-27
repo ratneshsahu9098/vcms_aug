@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compliance Cards - {{ vehicle_data|length }} Vehicles</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    background: #666;
+    overflow-x: hidden;
+  }
+
+  @page { size: A4; margin: 0; }
+
+  .print-page {
+    background: #fff;
+    color: #111;
+    font-family: "Segoe UI", Roboto, sans-serif;
+    width: 210mm;
+    min-height: 297mm;
+    max-height: 297mm;
+    margin: 10px auto;
+    padding: 10mm 12mm;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+    border: 1px solid #ddd;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .print-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 3px solid #111;
+    padding-bottom: 6pt;
+    margin-bottom: 6pt;
+    flex-shrink: 0;
+  }
+  .print-header-left h1 { margin: 0; font-size: 20pt; color: #555; }
+  .print-header-left p { margin: 1px 0 0; color: #888; font-size: 13pt; }
+
+  .compliance-badge {
+    flex-shrink: 0;
+    border: 2px solid;
+    border-radius: 8px;
+    padding: 4pt 14pt;
+    text-align: center;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .compliance-badge .score { font-size: 24pt; line-height: 1; }
+  .compliance-badge .label { font-size: 12pt; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+  .compliance-badge .status { font-size: 14pt; margin-top: 1px; }
+
+  .vehicle-hero {
+    text-align: center;
+    padding: 8pt 0 6pt;
+    border-bottom: 2px solid #111;
+    margin-bottom: 6pt;
+    flex-shrink: 0;
+  }
+  .vehicle-hero-number {
+    font-size: 38pt;
+    font-weight: 900;
+    color: #111;
+    letter-spacing: 3px;
+    line-height: 1;
+    word-break: break-word;
+  }
+  .vehicle-hero-sub { font-size: 15pt; color: #555; margin-top: 3pt; }
+
+  .section-title {
+    font-size: 14pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #444;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 2pt;
+    margin: 8pt 0 4pt;
+    flex-shrink: 0;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4pt 14pt;
+    font-size: 13.5pt;
+  }
+  .info-grid.two-col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .info-grid .item {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 4pt;
+    min-width: 0;
+  }
+  .info-grid .item .lbl { color: #666; flex-shrink: 0; }
+  .info-grid .item .val {
+    font-weight: 600;
+    color: #111;
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+
+  .doc-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 14pt;
+    margin-top: 4pt;
+  }
+  .doc-table th {
+    background: #f0f0f0;
+    text-align: left;
+    padding: 7pt 10pt;
+    font-weight: 700;
+    border: 1px solid #ccc;
+  }
+  .doc-table td {
+    padding: 7pt 10pt;
+    border: 1px solid #ccc;
+    overflow-wrap: anywhere;
+  }
+  .doc-table th:nth-child(1), .doc-table td:nth-child(1) { width: 32%; }
+  .doc-table th:nth-child(2), .doc-table td:nth-child(2) { width: 28%; }
+  .doc-table th:nth-child(3), .doc-table td:nth-child(3) { width: 40%; }
+
+  .status-dot {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .dot-green  { background: #22c55e; }
+  .dot-yellow { background: #eab308; }
+  .dot-orange { background: #f97316; }
+  .dot-red    { background: #ef4444; }
+  .dot-gray   { background: #9ca3af; }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4pt 14pt;
+    font-size: 8pt;
+    color: #666;
+    margin-top: 5pt;
+    flex-shrink: 0;
+  }
+  .legend .item { display: flex; align-items: center; gap: 4px; }
+
+  .bottom-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16pt;
+    margin-top: 8pt;
+    flex-shrink: 0;
+  }
+  .bottom-qr { flex-shrink: 0; }
+  .bottom-qr img { border: 1px solid #ccc; width: 143px; height: 143px; display: block; }
+  .bottom-qr .qr-text { font-size: 8pt; color: #555; margin-top: 4pt; max-width: 140px; overflow-wrap: anywhere; }
+
+  .bottom-details { flex: 1; min-width: 0; }
+
+  .remarks-box {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 6pt 10pt;
+    font-size: 9.5pt;
+    color: #333;
+    margin-top: 4pt;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .vehicle-card { page-break-after: always; }
+  .vehicle-card:last-child { page-break-after: auto; }
+
+  .print-footer {
+    margin-top: auto;
+    padding-top: 6pt;
+    border-top: 1px solid #ccc;
+    display: flex;
+    justify-content: space-between;
+    font-size: 8pt;
+    color: #888;
+    flex-shrink: 0;
+  }
+
+  .no-print-btn {
+    position: fixed; top: 16px; right: 16px; z-index: 999;
+    display: flex; gap: 8px;
+  }
+  .no-print-btn button {
+    padding: 8px 16px; border-radius: 6px; border: none;
+    cursor: pointer; font-weight: 600; font-size: 0.85rem;
+  }
+  .btn-print { background: #3b82f6; color: #fff; }
+  .btn-print:hover { background: #2563eb; }
+  .btn-close { background: #e5e7eb; color: #333; }
+  .btn-close:hover { background: #d1d5db; }
+
+  @media print {
+    html, body { background: #fff; }
+    .no-print-btn { display: none !important; }
+    .print-page {
+      width: 210mm; height: 297mm;
+      margin: 0; padding: 10mm 12mm;
+      box-shadow: none; border: none;
+    }
+    .vehicle-card { page-break-after: always; }
+    .vehicle-card:last-child { page-break-after: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="no-print-btn">
+  <button class="btn-print" onclick="window.print()"><i class="fa-solid fa-print"></i> Print All ({{ vehicle_data|length }})</button>
+  <button class="btn-close" onclick="window.close()"><i class="fa-solid fa-xmark"></i> Close</button>
+</div>
+
+{% for item in vehicle_data %}
+<div class="print-page">
+<div class="vehicle-card">
+
+  <div class="print-header">
+    <div class="print-header-left">
+      <h1><i class="fa-solid fa-truck-fast"></i> VCMS</h1>
+      <p>Vehicle Compliance Management System</p>
+    </div>
+    <div class="compliance-badge" style="border-color: {{ item.badge_color }};">
+      <div class="score" style="color: {{ item.badge_color }};">{{ item.valid_count }}/{{ item.total }}</div>
+      <div class="label">Compliance</div>
+      <div class="status" style="color: {{ item.badge_color }};">{{ item.badge_label }}</div>
+    </div>
+  </div>
+
+  <div class="vehicle-hero">
+    <div class="vehicle-hero-number">{{ item.vehicle.vehicle_number }}</div>
+    <div class="vehicle-hero-sub">{{ item.vehicle.owner_name }} · {{ item.vehicle.vehicle_type or 'N/A' }} · {{ item.vehicle.district or 'N/A' }}</div>
+  </div>
+
+  <div class="info-grid">
+    <div class="item"><span class="lbl">Chassis No:</span><span class="val">{{ item.vehicle.chassis_number }}</span></div>
+    <div class="item"><span class="lbl">Engine No:</span><span class="val">{{ item.vehicle.engine_number or 'N/A' }}</span></div>
+    <div class="item"><span class="lbl">Registration:</span><span class="val">{{ item.vehicle.registration_date.strftime('%d-%m-%Y') if item.vehicle.registration_date else 'N/A' }}</span></div>
+  </div>
+
+  <div class="section-title">Document Compliance Status</div>
+  <table class="doc-table">
+    <thead>
+      <tr><th>Document</th><th>Expiry Date</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      {% for label, info in item.statuses.items() %}
+      <tr>
+        <td><strong>{{ label }}</strong></td>
+        <td>{{ info.expiry.strftime('%d-%m-%Y') if info.expiry else 'Not Set' }}</td>
+        <td>
+          <span class="status-dot {{ info.class.replace('status-', 'dot-') }}"></span>
+          {{ info.status }}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="legend">
+    <span class="item"><span class="status-dot dot-green"></span>Valid</span>
+    <span class="item"><span class="status-dot dot-yellow"></span>Expiring Soon</span>
+    <span class="item"><span class="status-dot dot-orange"></span>Expiring Very Soon</span>
+    <span class="item"><span class="status-dot dot-red"></span>Expired</span>
+    <span class="item"><span class="status-dot dot-gray"></span>Not Set / N/A</span>
+  </div>
+
+  <div class="section-title">Additional Details</div>
+  <div class="info-grid two-col">
+    <div class="item"><span class="lbl">Tax Amount:</span><span class="val">{{ '₹%.2f'|format(item.vehicle.tax_amount) if item.vehicle.tax_amount else 'N/A' }}</span></div>
+    <div class="item"><span class="lbl">Insurance Co:</span><span class="val">{{ item.vehicle.insurance_company or 'N/A' }}</span></div>
+    <div class="item"><span class="lbl">Policy No:</span><span class="val">{{ item.vehicle.policy_number or 'N/A' }}</span></div>
+    <div class="item"><span class="lbl">Pollution Cert:</span><span class="val">{{ item.vehicle.pollution_certificate_number or 'N/A' }}</span></div>
+    <div class="item"><span class="lbl">Tax Period:</span><span class="val">{{ item.vehicle.tax_from.strftime('%d-%m-%Y') if item.vehicle.tax_from else 'N/A' }} to {{ item.vehicle.tax_expiry.strftime('%d-%m-%Y') if item.vehicle.tax_expiry else 'N/A' }}</span></div>
+  </div>
+
+  <div class="bottom-row">
+    <div class="bottom-qr">
+      <img src="{{ url_for('vehicle_qr', vehicle_id=item.vehicle.id) }}" alt="QR Code">
+      <div class="qr-text">
+        <div><strong>Scan for full details</strong></div>
+        <div>ID: VC-{{ item.vehicle.created_at.strftime('%Y%m%d') if item.vehicle.created_at else '0000' }}-{{ '%04d'|format(item.vehicle.id) }}</div>
+      </div>
+    </div>
+    <div class="bottom-details">
+      {% if item.vehicle.remarks %}
+      <div class="section-title" style="margin-top:0;">Remarks</div>
+      <div class="remarks-box">{{ item.vehicle.remarks }}</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="print-footer">
+    <span>Generated on {{ item.vehicle.updated_at.strftime('%d %b %Y, %I:%M %p') if item.vehicle.updated_at else 'N/A' }}</span>
+    <span>VCMS - Vehicle Compliance Management System</span>
+  </div>
+
+</div>
+</div>
+{% endfor %}
+
+</body>
+</html>

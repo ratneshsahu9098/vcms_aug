@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+{% block title %}Import Excel{% endblock %}
+{% block page_title %}Import Excel{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <h3 class="panel-title"><i class="fa-solid fa-file-import"></i> Upload Vehicle Data</h3>
+  <p class="text-muted">
+    Supported columns: Vehicle Number, Chassis Number, Owner Name, Phone, PUC, Fitness, Permit, Tax, Insurance.
+    Accepted formats: .xlsx, .xls, .csv, .json
+  </p>
+
+  <form method="POST" enctype="multipart/form-data" class="import-form">
+    <input type="file" name="file" accept=".xlsx,.xls,.csv,.json" class="form-control" required>
+    <select name="duplicate_action" class="form-select" style="max-width:220px;">
+      <option value="skip">Skip Duplicates</option>
+      <option value="update">Update Existing Records</option>
+    </select>
+    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-upload"></i> Upload &amp; Import</button>
+  </form>
+
+  <div class="import-steps">
+    <span class="step active">Upload</span>
+    <i class="fa-solid fa-arrow-right"></i>
+    <span class="step">Validate</span>
+    <i class="fa-solid fa-arrow-right"></i>
+    <span class="step">Preview</span>
+    <i class="fa-solid fa-arrow-right"></i>
+    <span class="step">Import</span>
+    <i class="fa-solid fa-arrow-right"></i>
+    <span class="step">Summary</span>
+  </div>
+
+  {% if import_errors %}
+  <div class="import-errors">
+    <h4>Rows skipped</h4>
+    <ul>
+      {% for err in import_errors %}
+      <li>{{ err }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

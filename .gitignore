@@ -1,0 +1,7 @@
+__pycache__/
+venv/
+uploads/
+backups/
+exports/
+*.db
+*.pyc

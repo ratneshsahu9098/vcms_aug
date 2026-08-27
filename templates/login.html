@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+{% block title %}Login{% endblock %}
+{% block auth_content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <i class="fa-solid fa-truck-fast"></i>
+      <h1>VCMS</h1>
+      <p>Vehicle Compliance Management System</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-stack">
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+      <div class="mb-3">
+        <label class="form-label">Username</label>
+        <input type="text" name="username" class="form-control" required autofocus>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" class="form-control" required>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Sign In</button>
+    </form>
+    <p class="auth-hint">Default: admin / admin123 (change in config.py)</p>
+  </div>
+</div>
+{% endblock %}

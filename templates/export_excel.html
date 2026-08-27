@@ -1,0 +1,143 @@
+{% extends "layout.html" %}
+{% block title %}Export Excel{% endblock %}
+{% block page_title %}Export Excel{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <h3 class="panel-title"><i class="fa-solid fa-file-export"></i> Export Vehicle Data</h3>
+
+  <form method="GET" action="{{ url_for('export_run') }}" class="export-form" id="exportForm">
+    <div class="form-group">
+      <label>Scope</label>
+      <select name="scope" class="form-select" id="scopeSelect">
+        <option value="all">All Vehicles</option>
+        <option value="owner_vehicle">Owner & Vehicle Only</option>
+        <option value="expired">Expired Records</option>
+        <option value="due7">Due in 7 Days</option>
+        <option value="due30">Due in 30 Days</option>
+        <option value="custom">Custom Date Range</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Filter by Owner</label>
+      <select name="owner_name" class="form-select">
+        <option value="">All Owners</option>
+        {% for owner in owners %}
+        <option value="{{ owner }}">{{ owner }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group date-range-fields" id="dateRangeFields" style="display:none;">
+      <label>Start Date</label>
+      <input type="date" name="start" class="form-control">
+      <label>End Date</label>
+      <input type="date" name="end" class="form-control">
+    </div>
+
+    <div class="form-group">
+      <label>Format</label>
+      <select name="format" class="form-select">
+        <option value="xlsx">Excel (.xlsx)</option>
+        <option value="csv">CSV</option>
+        <option value="json">JSON</option>
+      </select>
+    </div>
+
+    <div class="form-group col-picker-group">
+      <label>Columns to Export</label>
+      <div class="col-picker-toolbar">
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="selectAllCols"><i class="fa-solid fa-check-square"></i> Select All</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="deselectAllCols"><i class="fa-regular fa-square"></i> Deselect All</button>
+        <span class="col-picker-sep">|</span>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="presetCompliance"><i class="fa-solid fa-file-shield"></i> Compliance Summary</button>
+      </div>
+      <div class="col-picker-grid">
+        <div class="col-picker-group-box">
+          <div class="col-picker-group-title">Basic Information</div>
+          {% for key, label in export_columns %}
+            {% if key in ('vehicle_number','chassis_number','engine_number','sr_no','owner_name','mobile_number','vehicle_type','district','registration_date') %}
+            <label class="col-picker-item">
+              <input type="checkbox" name="columns" value="{{ key }}" checked>
+              <span>{{ label }}</span>
+            </label>
+            {% endif %}
+          {% endfor %}
+        </div>
+        <div class="col-picker-group-box">
+          <div class="col-picker-group-title">Compliance Documents</div>
+          {% for key, label in export_columns %}
+            {% if key in ('puc_expiry','fitness_expiry','permit_expiry','tax_expiry','tax_from','insurance_expiry','national_permit_expiry','state_permit_expiry') %}
+            <label class="col-picker-item">
+              <input type="checkbox" name="columns" value="{{ key }}" checked>
+              <span>{{ label }}</span>
+            </label>
+            {% endif %}
+          {% endfor %}
+        </div>
+        <div class="col-picker-group-box">
+          <div class="col-picker-group-title">Other Details</div>
+          {% for key, label in export_columns %}
+            {% if key in ('tax_mode','tax_amount','insurance_company','policy_number','pollution_certificate_number','remarks') %}
+            <label class="col-picker-item">
+              <input type="checkbox" name="columns" value="{{ key }}" checked>
+              <span>{{ label }}</span>
+            </label>
+            {% endif %}
+          {% endfor %}
+        </div>
+        <div class="col-picker-group-box">
+          <div class="col-picker-group-title">Metadata</div>
+          {% for key, label in export_columns %}
+            {% if key in ('created_at','updated_at') %}
+            <label class="col-picker-item">
+              <input type="checkbox" name="columns" value="{{ key }}" checked>
+              <span>{{ label }}</span>
+            </label>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-download"></i> Export</button>
+  </form>
+</div>
+
+<script>
+var scopeSelect = document.getElementById('scopeSelect');
+
+function updateColumnsForScope() {
+  var dateFields = document.getElementById('dateRangeFields');
+  dateFields.style.display = scopeSelect.value === 'custom' ? 'flex' : 'none';
+
+  if (scopeSelect.value === 'owner_vehicle') {
+    document.querySelectorAll('.col-picker-item input[type="checkbox"]').forEach(function(cb) {
+      cb.checked = cb.value === 'owner_name' || cb.value === 'vehicle_number';
+    });
+  }
+}
+
+scopeSelect.addEventListener('change', updateColumnsForScope);
+
+document.getElementById('selectAllCols').addEventListener('click', function() {
+  document.querySelectorAll('.col-picker-item input[type="checkbox"]').forEach(function(cb) {
+    cb.checked = true;
+  });
+});
+
+document.getElementById('deselectAllCols').addEventListener('click', function() {
+  document.querySelectorAll('.col-picker-item input[type="checkbox"]').forEach(function(cb) {
+    cb.checked = false;
+  });
+});
+
+document.getElementById('presetCompliance').addEventListener('click', function() {
+  var preset = ['vehicle_number', 'chassis_number', 'puc_expiry', 'fitness_expiry', 'tax_expiry'];
+  document.querySelectorAll('.col-picker-item input[type="checkbox"]').forEach(function(cb) {
+    cb.checked = preset.indexOf(cb.value) !== -1;
+  });
+});
+</script>
+{% endblock %}

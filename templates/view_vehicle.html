@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+{% block title %}{{ vehicle.vehicle_number }}{% endblock %}
+{% block page_title %}Vehicle · {{ vehicle.vehicle_number }}{% endblock %}
+
+{% block content %}
+<div class="vehicle-nav">
+  {% if prev_vehicle %}
+  <a href="{{ url_for('view_vehicle', vehicle_id=prev_vehicle.id) }}" class="btn btn-outline-secondary">
+    <i class="fa-solid fa-arrow-left"></i> {{ prev_vehicle.vehicle_number }}
+  </a>
+  {% else %}
+  <span></span>
+  {% endif %}
+  <span class="vehicle-nav-label">{{ vehicle.sr_no or '' }}</span>
+  {% if next_vehicle %}
+  <a href="{{ url_for('view_vehicle', vehicle_id=next_vehicle.id) }}" class="btn btn-outline-secondary">
+    {{ next_vehicle.vehicle_number }} <i class="fa-solid fa-arrow-right"></i>
+  </a>
+  {% else %}
+  <span></span>
+  {% endif %}
+</div>
+
+<div class="detail-card">
+  <div class="detail-header">
+    <div>
+      <h2>{{ vehicle.vehicle_number }}</h2>
+      <p class="text-muted">{{ vehicle.owner_name }} · {{ vehicle.mobile_number }}</p>
+    </div>
+    <div class="detail-actions">
+      <a href="{{ url_for('edit_vehicle', vehicle_id=vehicle.id) }}" class="btn btn-primary"><i class="fa-solid fa-pen"></i> Edit</a>
+      <a href="{{ url_for('vehicle_tax', vehicle_id=vehicle.id) }}" class="btn btn-outline-info"><i class="fa-solid fa-clock-rotate-left"></i> Tax History</a>
+      <a href="{{ url_for('print_vehicle', vehicle_id=vehicle.id) }}" target="_blank" class="btn btn-outline-warning"><i class="fa-solid fa-print"></i> Print Compliance Card</a>
+      <a href="{{ url_for('whatsapp_expired', vehicle_id=vehicle.id) }}" target="_blank" class="btn btn-outline-success"><i class="fa-brands fa-whatsapp"></i> Send Expiry Reminder</a>
+      <a href="{{ url_for('whatsapp_reminder', vehicle_id=vehicle.id, document_label='all') }}" target="_blank" class="btn btn-outline-success"><i class="fa-brands fa-whatsapp"></i> Send All Details</a>
+      <a href="https://wa.me/{{ vehicle.mobile_number }}" target="_blank" class="btn btn-outline-success"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+      <a href="tel:{{ vehicle.mobile_number }}" class="btn btn-outline-secondary"><i class="fa-solid fa-phone"></i> Call</a>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <div><span class="detail-label">Sr. No.</span><span>{{ vehicle.sr_no or '—' }}</span></div>
+    <div><span class="detail-label">Chassis Number</span><span>{{ vehicle.chassis_number }}</span></div>
+    <div><span class="detail-label">Engine Number</span><span>{{ vehicle.engine_number or '—' }}</span></div>
+    <div><span class="detail-label">Vehicle Type</span><span>{{ vehicle.vehicle_type or '—' }}</span></div>
+    <div><span class="detail-label">District</span><span>{{ vehicle.district or '—' }}</span></div>
+    <div><span class="detail-label">Registration Date</span><span>{{ vehicle.registration_date.strftime('%d-%m-%Y') if vehicle.registration_date else '—' }}</span></div>
+    <div><span class="detail-label">Tax Mode</span><span>{{ vehicle.tax_mode or '—' }}</span></div>
+    <div><span class="detail-label">Tax Period</span><span>{{ vehicle.tax_from.strftime('%d-%m-%Y') if vehicle.tax_from else '—' }} to {{ vehicle.tax_expiry.strftime('%d-%m-%Y') if vehicle.tax_expiry else '—' }}</span></div>
+    <div><span class="detail-label">Tax Amount</span><span>{{ vehicle.tax_amount|round(2) if vehicle.tax_amount else '—' }}</span></div>
+    <div><span class="detail-label">Insurance Company</span><span>{{ vehicle.insurance_company or '—' }}</span></div>
+    <div><span class="detail-label">Policy Number</span><span>{{ vehicle.policy_number or '—' }}</span></div>
+    <div><span class="detail-label">Pollution Cert. No.</span><span>{{ vehicle.pollution_certificate_number or '—' }}</span></div>
+  </div>
+
+  <h3 class="section-heading">Compliance Documents</h3>
+  <div class="doc-status-grid">
+    {% for label, info in vehicle.document_statuses().items() %}
+    <div class="doc-status-item">
+      <div class="doc-status-label">{{ label }}</div>
+      <div class="doc-status-date">{{ info.expiry.strftime('%d-%m-%Y') if info.expiry else 'Not set' }}</div>
+      <span class="badge-status {{ info.class }}">{{ info.status }}</span>
+      {% if info.expiry %}
+        {% set days_left = (info.expiry - today).days %}
+        {% if days_left < 0 %}
+          <div class="doc-days-left expired">{{ days_left|abs }} days ago</div>
+        {% elif days_left == 0 %}
+          <div class="doc-days-left warning">Expires today</div>
+        {% else %}
+          <div class="doc-days-left {% if days_left <= 7 %}warning{% elif days_left <= 30 %}caution{% endif %}">{{ days_left }} days left</div>
+        {% endif %}
+      <a href="{{ url_for('whatsapp_reminder', vehicle_id=vehicle.id, document_label=label) }}" class="doc-remind-link">
+        <i class="fa-brands fa-whatsapp"></i> Send Reminder
+      </a>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if vehicle.remarks %}
+  <h3 class="section-heading">Remarks</h3>
+  <p>{{ vehicle.remarks }}</p>
+  {% endif %}
+
+  <p class="text-muted detail-timestamps">
+    Added {{ vehicle.created_at.strftime('%d %b %Y, %I:%M %p') }} ·
+    Last updated {{ vehicle.updated_at.strftime('%d %b %Y, %I:%M %p') }}
+  </p>
+</div>
+{% endblock %}

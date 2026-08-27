@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+{% block title %}Tax Details · {{ vehicle.vehicle_number }}{% endblock %}
+{% block page_title %}Tax Details · {{ vehicle.vehicle_number }}{% endblock %}
+
+{% block content %}
+<div class="detail-header">
+  <div>
+    <a href="{{ url_for('view_vehicle', vehicle_id=vehicle.id) }}" class="btn btn-outline-secondary mb-2">&larr; Back to Vehicle</a>
+  </div>
+  <div class="detail-actions">
+    <a href="{{ url_for('add_tax', vehicle_id=vehicle.id) }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add Tax Record</a>
+  </div>
+</div>
+
+<div class="table-wrap">
+<table class="table-main">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Tax Mode</th>
+      <th>From</th>
+      <th>Upto</th>
+      <th>Amount</th>
+      <th>Penalty</th>
+      <th>Total</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for t in taxes %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td>{{ t.tax_mode }}</td>
+      <td>{{ t.latest_tax_from.strftime('%d-%m-%Y') if t.latest_tax_from else '—' }}</td>
+      <td>{{ t.latest_tax_upto.strftime('%d-%m-%Y') if t.latest_tax_upto else '—' }}</td>
+      <td>{{ t.tax_amount|round(2) }}</td>
+      <td>{{ t.penalty|round(2) }}</td>
+      <td><strong>{{ (t.tax_amount + t.penalty)|round(2) }}</strong></td>
+      <td class="actions-cell">
+        <a href="{{ url_for('edit_tax', tax_id=t.id) }}" title="Edit"><i class="fa-solid fa-pen"></i></a>
+        <form method="POST" action="{{ url_for('delete_tax', tax_id=t.id) }}"
+              onsubmit="return confirm('Delete this tax record?');" class="inline-form">
+          <button type="submit" title="Delete"><i class="fa-solid fa-trash"></i></button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="8" class="empty-hint">No tax records found. <a href="{{ url_for('add_tax', vehicle_id=vehicle.id) }}">Add one now</a>.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

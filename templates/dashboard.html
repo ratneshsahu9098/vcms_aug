@@ -1,0 +1,102 @@
+{% extends "layout.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="stat-grid">
+  <a href="{{ url_for('vehicle_list') }}" class="stat-card stat-link">
+    <div class="stat-icon icon-blue"><i class="fa-solid fa-car"></i></div>
+    <div>
+      <div class="stat-value">{{ total_vehicles }}</div>
+      <div class="stat-label">Total Vehicles</div>
+    </div>
+  </a>
+  <a href="{{ url_for('vehicle_list', status='valid') }}" class="stat-card stat-link">
+    <div class="stat-icon icon-green"><i class="fa-solid fa-check"></i></div>
+    <div>
+      <div class="stat-value">{{ active_vehicles }}</div>
+      <div class="stat-label">Active Vehicles</div>
+    </div>
+  </a>
+  <a href="{{ url_for('vehicle_list', status='expired') }}" class="stat-card stat-link">
+    <div class="stat-icon icon-red"><i class="fa-solid fa-circle-xmark"></i></div>
+    <div>
+      <div class="stat-value">{{ expired_count }}</div>
+      <div class="stat-label">Expired Documents</div>
+    </div>
+  </a>
+  <a href="{{ url_for('vehicle_list', status='today') }}" class="stat-card stat-link">
+    <div class="stat-icon icon-orange"><i class="fa-solid fa-clock"></i></div>
+    <div>
+      <div class="stat-value">{{ expiring_today }}</div>
+      <div class="stat-label">Expiring Today</div>
+    </div>
+  </a>
+  <a href="{{ url_for('vehicle_list', status='7days') }}" class="stat-card stat-link">
+    <div class="stat-icon icon-orange"><i class="fa-solid fa-calendar-week"></i></div>
+    <div>
+      <div class="stat-value">{{ expiring_7 }}</div>
+      <div class="stat-label">Expiring in 7 Days</div>
+    </div>
+  </a>
+  <a href="{{ url_for('vehicle_list', status='30days') }}" class="stat-card stat-link">
+    <div class="stat-icon icon-yellow"><i class="fa-solid fa-calendar-days"></i></div>
+    <div>
+      <div class="stat-value">{{ expiring_30 }}</div>
+      <div class="stat-label">Expiring in 30 Days</div>
+    </div>
+  </a>
+</div>
+
+<h2 class="section-heading">Document Overview</h2>
+<div class="doc-card-grid">
+  {% for label, stats in doc_card_stats.items() %}
+  <div class="doc-card">
+    <div class="doc-card-title">{{ label }}</div>
+    <div class="doc-card-row"><span class="dot dot-green"></span> Valid <b>{{ stats.valid }}</b></div>
+    <div class="doc-card-row"><span class="dot dot-yellow"></span> Expiring <b>{{ stats.expiring }}</b></div>
+    <div class="doc-card-row"><span class="dot dot-red"></span> Expired <b>{{ stats.expired }}</b></div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="activity-grid">
+  <div class="panel">
+    <h3 class="panel-title"><i class="fa-solid fa-clock-rotate-left"></i> Recently Added Vehicles</h3>
+    {% if recent_added %}
+    <table class="table-plain">
+      <tbody>
+      {% for v in recent_added %}
+        <tr>
+          <td><a href="{{ url_for('view_vehicle', vehicle_id=v.id) }}">{{ v.vehicle_number }}</a></td>
+          <td>{{ v.owner_name }}</td>
+          <td class="text-muted">{{ v.created_at.strftime('%d %b %Y') }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="empty-hint">No vehicles added yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="panel">
+    <h3 class="panel-title"><i class="fa-solid fa-pen"></i> Recently Updated Records</h3>
+    {% if recent_updated %}
+    <table class="table-plain">
+      <tbody>
+      {% for v in recent_updated %}
+        <tr>
+          <td><a href="{{ url_for('view_vehicle', vehicle_id=v.id) }}">{{ v.vehicle_number }}</a></td>
+          <td>{{ v.owner_name }}</td>
+          <td class="text-muted">{{ v.updated_at.strftime('%d %b %Y') }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="empty-hint">No records updated yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

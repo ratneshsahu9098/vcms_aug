@@ -1,0 +1,83 @@
+{% extends "layout.html" %}
+{% block title %}Reports{% endblock %}
+{% block page_title %}Reports{% endblock %}
+
+{% block content %}
+<div class="report-tabs">
+  {% for key, label in [
+    ('puc_due','PUC Due'), ('fitness_due','Fitness Due'), ('tax_due','Tax Due'),
+    ('permit_due','Permit Due'), ('insurance_due','Insurance Due'),
+    ('owner_wise','Owner-wise'), ('type_wise','Vehicle Type-wise'),
+    ('monthly_renewals','Monthly Renewals'), ('yearly_renewals','Yearly Renewals')
+  ] %}
+  <a href="{{ url_for('reports', type=key) }}" class="report-tab {{ 'active' if report_type==key }}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+<div class="panel">
+  {% if not report_type %}
+    <p class="empty-hint">Select a report type above to generate a report.</p>
+
+  {% elif report_type in ['puc_due','fitness_due','tax_due','permit_due','insurance_due'] %}
+    {% if results %}
+    <table class="table-main">
+      <thead><tr><th>Vehicle</th><th>Owner</th><th>Document</th><th>Expiry Date</th></tr></thead>
+      <tbody>
+        {% for r in results %}
+        <tr>
+          <td><a href="{{ url_for('view_vehicle', vehicle_id=r.vehicle.id) }}">{{ r.vehicle.vehicle_number }}</a></td>
+          <td>{{ r.vehicle.owner_name }}</td>
+          <td>{{ r.field }}</td>
+          <td>{{ r.expiry.strftime('%d-%m-%Y') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="empty-hint">No records due within 30 days.</p>
+    {% endif %}
+
+  {% elif report_type in ['owner_wise','type_wise'] %}
+    {% if results %}
+      {% for group_name, group_vehicles in results %}
+      <h4 class="report-group-title">{{ group_name }} <span class="text-muted">({{ group_vehicles|length }})</span></h4>
+      <table class="table-main mb-4">
+        <thead><tr><th>Vehicle Number</th><th>Chassis Number</th><th>Owner</th></tr></thead>
+        <tbody>
+          {% for v in group_vehicles %}
+          <tr>
+            <td><a href="{{ url_for('view_vehicle', vehicle_id=v.id) }}">{{ v.vehicle_number }}</a></td>
+            <td>{{ v.chassis_number }}</td>
+            <td>{{ v.owner_name }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endfor %}
+    {% else %}
+    <p class="empty-hint">No data available.</p>
+    {% endif %}
+
+  {% elif report_type in ['monthly_renewals','yearly_renewals'] %}
+    {% if results %}
+      {% for doc_label, entries in results %}
+      <h4 class="report-group-title">{{ doc_label }} <span class="text-muted">({{ entries|length }})</span></h4>
+      <table class="table-main mb-4">
+        <thead><tr><th>Vehicle Number</th><th>Owner</th><th>Expiry Date</th></tr></thead>
+        <tbody>
+          {% for v, expiry in entries %}
+          <tr>
+            <td><a href="{{ url_for('view_vehicle', vehicle_id=v.id) }}">{{ v.vehicle_number }}</a></td>
+            <td>{{ v.owner_name }}</td>
+            <td>{{ expiry.strftime('%d-%m-%Y') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endfor %}
+    {% else %}
+    <p class="empty-hint">No renewals found for this period.</p>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

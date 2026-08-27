@@ -1,0 +1,177 @@
+{% extends "layout.html" %}
+{% block title %}Vehicles{% endblock %}
+{% block page_title %}Vehicles{% endblock %}
+
+{% block content %}
+<form method="GET" class="filter-bar">
+  <input type="text" name="q" value="{{ filters.get('q','') }}" class="form-control search-input"
+         placeholder="Search by vehicle no, chassis, engine, owner, phone, policy...">
+
+  <select name="status" class="form-select">
+    <option value="">All Status</option>
+    <option value="expired" {{ 'selected' if filters.get('status')=='expired' }}>Expired</option>
+    <option value="valid" {{ 'selected' if filters.get('status')=='valid' }}>Valid</option>
+    <option value="today" {{ 'selected' if filters.get('status')=='today' }}>Expiring Today</option>
+    <option value="2days" {{ 'selected' if filters.get('status')=='2days' }}>Expiring in 2 Days</option>
+    <option value="7days" {{ 'selected' if filters.get('status')=='7days' }}>Expiring in 7 Days</option>
+    <option value="15days" {{ 'selected' if filters.get('status')=='15days' }}>Expiring in 15 Days</option>
+    <option value="30days" {{ 'selected' if filters.get('status')=='30days' }}>Expiring in 30 Days</option>
+  </select>
+
+  <select name="vehicle_type" class="form-select">
+    <option value="">All Types</option>
+    {% for t in vehicle_types %}
+      <option value="{{ t }}" {{ 'selected' if filters.get('vehicle_type')==t }}>{{ t }}</option>
+    {% endfor %}
+  </select>
+
+  <select name="district" class="form-select">
+    <option value="">All Districts</option>
+    {% for d in districts %}
+      <option value="{{ d }}" {{ 'selected' if filters.get('district')==d }}>{{ d }}</option>
+    {% endfor %}
+  </select>
+
+  <button type="submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Filter</button>
+  <a href="{{ url_for('vehicle_list') }}" class="btn btn-outline-secondary">Reset</a>
+  <a href="{{ url_for('add_vehicle') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add Vehicle</a>
+</form>
+
+<div class="bulk-actions">
+  <label class="select-all-label">
+    <input type="checkbox" id="selectAll"> Select All
+  </label>
+  <a href="{{ url_for('vehicle_list', status='2days') }}" class="btn btn-outline-warning btn-sm">
+    <i class="fa-solid fa-clock"></i> Expiry in 2 Days
+  </a>
+  <button type="button" id="btnPrintSelected" class="btn btn-outline-warning" disabled>
+    <i class="fa-solid fa-print"></i> Print Selected (<span id="selectedCount">0</span>)
+  </button>
+  <form method="POST" action="{{ url_for('delete_all_vehicles') }}"
+        onsubmit="return confirm('Delete ALL vehicles permanently? This cannot be undone.');" class="inline-form">
+    <button type="submit" class="btn btn-outline-danger"><i class="fa-solid fa-trash"></i> Delete All</button>
+  </form>
+</div>
+
+<div class="table-wrap">
+<table class="table-main">
+  <thead>
+    <tr>
+      <th class="col-check"><input type="checkbox" id="selectAllHead"></th>
+      <th>#</th>
+      <th>Vehicle No.</th>
+      <th>Chassis No.</th>
+      <th>Engine No.</th>
+      <th>Owner</th>
+      <th>Mobile</th>
+      <th>PUC</th>
+      <th>Fitness</th>
+      <th>Permit</th>
+      <th>Tax</th>
+      <th>Insurance</th>
+      <th>Expiry Days</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for v in vehicles %}
+    {% set statuses = v.document_statuses() %}
+    <tr>
+      <td class="col-check"><input type="checkbox" class="vehicle-check" data-id="{{ v.id }}"></td>
+      <td>{{ v.sr_no or loop.index }}</td>
+      <td><a href="{{ url_for('view_vehicle', vehicle_id=v.id) }}">{{ v.vehicle_number }}</a></td>
+      <td>{{ v.chassis_number }}</td>
+      <td>{{ v.engine_number or '—' }}</td>
+      <td>{{ v.owner_name }}</td>
+      <td>{{ v.mobile_number }}</td>
+      {% for label in ['PUC','Fitness','Permit','Tax','Insurance'] %}
+        <td>
+          {% set info = statuses[label] %}
+          <span class="badge-status {{ info.class }}" title="{{ info.status }}">
+            {{ info.expiry.strftime('%d-%m-%Y') if info.expiry else '—' }}
+          </span>
+        </td>
+      {% endfor %}
+      {% set ns = namespace(min_days=None) %}
+      {% for label, info in statuses.items() %}
+        {% if info.expiry %}
+          {% set days = (info.expiry - today).days %}
+          {% if ns.min_days is none or days < ns.min_days %}
+            {% set ns.min_days = days %}
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+      <td>
+        {% if ns.min_days is not none %}
+          {% if ns.min_days < 0 %}
+            <span class="badge-status status-red">{{ ns.min_days }}d</span>
+          {% elif ns.min_days == 0 %}
+            <span class="badge-status status-orange">0d</span>
+          {% elif ns.min_days <= 7 %}
+            <span class="badge-status status-orange">{{ ns.min_days }}d</span>
+          {% elif ns.min_days <= 30 %}
+            <span class="badge-status status-yellow">{{ ns.min_days }}d</span>
+          {% else %}
+            <span class="badge-status status-green">{{ ns.min_days }}d</span>
+          {% endif %}
+        {% else %}
+          <span class="badge-status status-gray">N/A</span>
+        {% endif %}
+      </td>
+      <td><span class="dot {{ v.overall_status().replace('status-', 'dot-') }}"></span></td>
+      <td class="actions-cell">
+        <a href="{{ url_for('view_vehicle', vehicle_id=v.id) }}" title="View"><i class="fa-solid fa-eye"></i></a>
+        <a href="{{ url_for('edit_vehicle', vehicle_id=v.id) }}" title="Edit"><i class="fa-solid fa-pen"></i></a>
+        <a href="{{ url_for('whatsapp_expired', vehicle_id=v.id) }}" target="_blank" title="Send Expired Documents Reminder via WhatsApp"><i class="fa-brands fa-whatsapp" style="color:#25d366;"></i></a>
+        <a href="{{ url_for('whatsapp_reminder', vehicle_id=v.id, document_label='all') }}" target="_blank" title="Send All Details via WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+        <a href="tel:{{ v.mobile_number }}" title="Call"><i class="fa-solid fa-phone"></i></a>
+        <form method="POST" action="{{ url_for('delete_vehicle', vehicle_id=v.id) }}"
+              onsubmit="return confirm('Delete vehicle {{ v.vehicle_number }}? This cannot be undone.');" class="inline-form">
+          <button type="submit" title="Delete"><i class="fa-solid fa-trash"></i></button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="15" class="empty-hint">No vehicles found. <a href="{{ url_for('add_vehicle') }}">Add one now</a>.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<script>
+(function() {
+  const selectAll = document.getElementById('selectAll');
+  const selectAllHead = document.getElementById('selectAllHead');
+  const checkboxes = document.querySelectorAll('.vehicle-check');
+  const btnPrint = document.getElementById('btnPrintSelected');
+  const countSpan = document.getElementById('selectedCount');
+
+  function updateCount() {
+    const checked = document.querySelectorAll('.vehicle-check:checked').length;
+    countSpan.textContent = checked;
+    btnPrint.disabled = checked === 0;
+  }
+
+  selectAll.addEventListener('change', function() {
+    checkboxes.forEach(cb => cb.checked = this.checked);
+    selectAllHead.checked = this.checked;
+    updateCount();
+  });
+  selectAllHead.addEventListener('change', function() {
+    checkboxes.forEach(cb => cb.checked = this.checked);
+    selectAll.checked = this.checked;
+    updateCount();
+  });
+  checkboxes.forEach(cb => cb.addEventListener('change', updateCount));
+
+  btnPrint.addEventListener('click', function() {
+    const ids = [];
+    document.querySelectorAll('.vehicle-check:checked').forEach(cb => ids.push(cb.dataset.id));
+    if (ids.length > 0) {
+      window.open('{{ url_for("print_vehicles") }}?ids=' + ids.join(','), '_blank');
+    }
+  });
+})();
+</script>
+{% endblock %}

@@ -28,10 +28,32 @@
   .back-btn { display: block; text-align: center; padding: 14px; background: #f8fafc; border-top: 1px solid #eee; }
   .back-btn a { text-decoration: none; color: #3b82f6; font-weight: 600; font-size: 0.9rem; }
   .back-btn a:hover { text-decoration: underline; }
-  @media print { .back-btn, body { display: none; } .qr-dates-card { box-shadow: none; border: none; } body { display: block; } .qr-dates-card { display: block; } }
+  .no-print { display: flex; gap: 10px; justify-content: center; padding: 14px; background: #f8fafc; border-top: 1px solid #eee; }
+  .no-print .btn { padding: 8px 18px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: 1px solid #d1d5db; background: #fff; color: #374151; text-decoration: none; }
+  .no-print .btn:hover { background: #f3f4f6; }
+  .no-print .btn-primary { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+  .no-print .btn-primary:hover { background: #2563eb; }
+  @media print {
+    body { background: #fff; padding: 0; display: block; }
+    .qr-dates-card { box-shadow: none; border: none; max-width: 100%; border-radius: 0; }
+    .no-print, .back-btn { display: none !important; }
+    .qr-section { padding: 20px; }
+    .qr-section img { width: 160px; height: 160px; }
+    .qr-section h2 { font-size: 1.3rem; }
+    .dates-section { padding: 16px 20px; }
+    .date-row { padding: 6px 0; }
+    .date-row .label { font-size: 0.85rem; }
+    .date-row .value { font-size: 0.85rem; }
+    .date-row .days { font-size: 0.75rem; }
+  }
 </style>
 </head>
 <body>
+
+<div class="no-print">
+  <button class="btn btn-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
+  <button class="btn" onclick="window.close()"><i class="fa-solid fa-xmark"></i> Close</button>
+</div>
 
 <div class="qr-dates-card">
   <div class="qr-section">

@@ -32,6 +32,13 @@
     {% endfor %}
   </select>
 
+  <select name="owner_name" class="form-select">
+    <option value="">All Owners</option>
+    {% for o in owner_names %}
+      <option value="{{ o }}" {{ 'selected' if filters.get('owner_name')==o }}>{{ o }}</option>
+    {% endfor %}
+  </select>
+
   <button type="submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Filter</button>
   <a href="{{ url_for('vehicle_list') }}" class="btn btn-outline-secondary">Reset</a>
   <a href="{{ url_for('add_vehicle') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add Vehicle</a>

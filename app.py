@@ -192,9 +192,9 @@ def register_routes(app):
         if vehicle_type:
             query = query.filter(Vehicle.vehicle_type == vehicle_type)
 
-        owner = request.args.get("owner", "").strip()
-        if owner:
-            query = query.filter(Vehicle.owner_name.ilike(f"%{owner}%"))
+        owner_name = request.args.get("owner_name", "").strip()
+        if owner_name:
+            query = query.filter(Vehicle.owner_name.ilike(f"%{owner_name}%"))
 
         district = request.args.get("district", "").strip()
         if district:
@@ -234,12 +234,14 @@ def register_routes(app):
 
         vehicle_types = [r[0] for r in db.session.query(Vehicle.vehicle_type).distinct() if r[0]]
         districts = [r[0] for r in db.session.query(Vehicle.district).distinct() if r[0]]
+        owner_names = [r[0] for r in db.session.query(Vehicle.owner_name).distinct() if r[0]]
 
         return render_template(
             "vehicle_list.html",
             vehicles=vehicles,
             vehicle_types=vehicle_types,
             districts=districts,
+            owner_names=owner_names,
             filters=request.args,
             today=date.today(),
         )
